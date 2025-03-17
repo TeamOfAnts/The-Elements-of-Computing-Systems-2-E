@@ -1,0 +1,80 @@
+
+
+CHIP NandNot {
+    IN in;
+    OUT out;
+
+    PARTS:
+    Nand(a=in, b=in, out=out);
+
+ // Nand(in, in) => Not(in and in)
+ // in and in = in (멱등법칙)
+ // Nand(in, in) = Not(in)
+}
+
+CHIP NorNot {
+
+    IN in;
+    OUT out;
+
+    PARTS:
+    Nor(a=in, b=in, out=out);
+
+}
+
+CHIP NandAnd {
+    IN a, b;
+    OUT out;
+
+    PARTS:
+    Nand(a=a, b=b, out=c); 
+    Nand(a=c, b=c, out=out);    
+    
+    // 이중 부정 
+}
+
+CHIP NorAnd {
+    IN a, b;
+    OUT out;
+
+    PARTS:
+    Nor(a=a, b=a, out = na) // Not(a)
+    Nor(a=b, b=b, out = nb) // Not(b)
+    Nor(a=na, b=nb, out=out) // Not(Not(a) or Not(b)) = Not(Not(a)) and Not(Not(b)) = a and b  
+
+    // 이중 부정 + 드 모르간의 법칙 
+}
+
+CHIP NandOr {
+    IN a, b;
+    OUT out;
+
+    PARTS:
+    Nand(a=a, b=a, out=na); // NOT a
+    Nand(a=b, b=b, out=nb); // NOT b
+    Nand(a=na, b=nb, out=out); // NOT (Not(a) and Not(b)) = NOT(NOT(a)) OR NOT(NOT(b)) = a or b 
+
+    // 이중 부정 + 드 모르간의 법칙 
+}
+
+CHIP NorOr {
+
+    IN a,b;
+    OUT out;
+
+    PARTS : 
+    Nor (a=a, b=b, out=c); // Not(a or b)
+    Nor (a=c, b=c, out=out); // Not(Not(a or b))
+
+    // 이중 부정
+}
+
+
+
+
+
+
+// 드모르간의 법칙 : AND <-> OR 
+// NOT(A AND B) = NOT A OR NOT B
+// NOT(A OR B) = NOT A AND NOT B
+// "비가 안 오거나, 눈이 안 온다" = "비 AND 눈 둘 다 안 온다"
