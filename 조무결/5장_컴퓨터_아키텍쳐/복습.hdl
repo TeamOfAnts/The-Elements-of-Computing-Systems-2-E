@@ -20,6 +20,9 @@ CHIP NorNot {
     PARTS:
     Nor(a=in, b=in, out=out);
 
+ // Nand(in, in) => Not(in or in)
+ // in or in = in (멱등법칙)
+ // Nand(in, in) = Not(in)
 }
 
 CHIP NandAnd {
@@ -31,6 +34,7 @@ CHIP NandAnd {
     Nand(a=c, b=c, out=out);    
     
     // 이중 부정 
+    // a 반대는 b, b의 반대는 a
 }
 
 CHIP NorAnd {
@@ -68,9 +72,6 @@ CHIP NorOr {
 
     // 이중 부정
 }
-
-
-
 
 
 

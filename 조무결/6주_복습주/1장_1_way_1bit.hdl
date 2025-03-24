@@ -1,0 +1,67 @@
+CHIP Mux {
+    IN a, b, sel;
+    OUT out;
+
+    PARTS:
+    Not(in=sel, out=nsel);
+    And(a=a, b=nsel, out=Aand);
+    And(a=b, b=sel, out=Band);
+    Or(a=Aand, b=Band, out=out)
+    // 소멸 법칙 (지배 법칙)
+    // 항등법칙
+
+    // Not 게이트로 sel의 보수를 만듦 → nsel
+    // And1, And2는 두 번째 인자로 1, 0 을 하나씩 받는다. (sel, not sel)
+    // 0으로 받는 쪽은 out이 무조건 0 (소멸 법칙)
+    // 1로 받는 쪽은 out이 첫번째 인자 (항등법칙)
+    // Or는 And 출력을 하나씩 입력으로 받는다. 
+    // Or 입력 중 하나는 0, 하나는 인풋 값 보존 
+    // 항등 법칙에 따라, 보존된 인풋 값이 아웃풋. 
+    
+    // 결과적으로:
+    // sel = 0 → a 전달
+    // sel = 1 → b 전달
+}
+
+CHIP DMux {
+    IN in, sel;
+    OUT a, b;
+
+    PARTS:
+    Not(in=sel, out=nsel);
+    And(a=in, b=nsel, out=a);
+    And(a=in, b=sel,  out=b);
+
+    // 논리적 해석:
+    // 1. Not 게이트로 sel의 보수를 만듦 → nsel
+    // 2. 첫 번째 And: in AND nsel
+    //    - nsel = 1일 때만 in 그대로 전달 (항등법칙)
+    //    - nsel = 0이면 out = 0 (소멸 법칙)
+    //    - 따라서, sel = 0 → a = in
+    // 3. 두 번째 And: in AND sel
+    //    - sel = 1일 때만 in 그대로 전달 (항등법칙)
+    //    - sel = 0이면 out = 0 (소멸 법칙)
+    //    - 따라서, sel = 1 → b = in
+    //
+    // 4. Or 게이트는 필요 없음.
+    //    - Mux와는 다르게, **in 신호를 둘 중 한 쪽으로 분배(demux)**하는 역할.
+    //    - 선택된 쪽에만 in 전달, 다른 쪽은 0.
+    //
+    // 핵심 법칙:
+    // - AND + 1 → 입력 값 그대로 (항등법칙)
+    // - AND + 0 → 무조건 0 (소멸법칙)
+    //
+    // 결과적으로:
+    // sel = 0 → a = in, b = 0
+    // sel = 1 → a = 0, b = in
+}
+
+
+// 논리 게이트 (칩) 설계는 논리 법칙 잘 써먹기 싸움 
+
+// (A AND B) OR (A AND (NOT B))
+// 논리 법칙 (보수 법칙, 분배 법칙을 모른다면) 비효율적인 칩 설계 
+// A and (B or Not(B)) // 분배 법칙  
+// A and (1) = A
+
+

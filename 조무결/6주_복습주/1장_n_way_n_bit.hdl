@@ -1,0 +1,191 @@
+// n_way → 직렬 (여러 입력 → 하나로) [표기 없으면 2way]
+// n_bit → 병렬 (비트별 독립 처리) [표기 없으면 1비트]
+
+// 16비트 멀티플렉서 (두 16비트 인풋 중 하나만 출력)
+CHIP Mux16 {
+    IN a[16], b[16], sel;
+    OUT out[16];
+
+    PARTS:
+    Mux(a=a[0],  b=b[0],  sel=sel, out=out[0]);
+    Mux(a=a[1],  b=b[1],  sel=sel, out=out[1]);
+    Mux(a=a[2],  b=b[2],  sel=sel, out=out[2]);
+    Mux(a=a[3],  b=b[3],  sel=sel, out=out[3]);
+    Mux(a=a[4],  b=b[4],  sel=sel, out=out[4]);
+    Mux(a=a[5],  b=b[5],  sel=sel, out=out[5]);
+    Mux(a=a[6],  b=b[6],  sel=sel, out=out[6]);
+    Mux(a=a[7],  b=b[7],  sel=sel, out=out[7]);
+    Mux(a=a[8],  b=b[8],  sel=sel, out=out[8]);
+    Mux(a=a[9],  b=b[9],  sel=sel, out=out[9]);
+    Mux(a=a[10], b=b[10], sel=sel, out=out[10]);
+    Mux(a=a[11], b=b[11], sel=sel, out=out[11]);
+    Mux(a=a[12], b=b[12], sel=sel, out=out[12]);
+    Mux(a=a[13], b=b[13], sel=sel, out=out[13]);
+    Mux(a=a[14], b=b[14], sel=sel, out=out[14]);
+    Mux(a=a[15], b=b[15], sel=sel, out=out[15]);
+}
+
+
+CHIP Mux4Way16 {
+    IN a[16], b[16], c[16], d[16], sel[2];
+    OUT out[16];
+    
+    PARTS:
+    // 첫 번째 레이어: a vs b, c vs d 각각 2개씩 선택
+    Mux16(a=a, b=b, sel=sel[0], out=ab);
+    Mux16(a=c, b=d, sel=sel[0], out=cd);
+    
+    // 두 번째 레이어: ab vs cd 선택
+    Mux16(a=ab, b=cd, sel=sel[1], out=out);
+}
+
+/**
+ * 4-way demultiplexor:
+ * [a, b, c, d] = [in, 0, 0, 0] if sel = 00
+ *                [0, in, 0, 0] if sel = 01
+ *                [0, 0, in, 0] if sel = 10
+ *                [0, 0, 0, in] if sel = 11
+ */
+CHIP DMux4Way {
+    IN in, sel[2];
+    OUT a, b, c, d;
+
+    PARTS:
+    // 첫 번째 단계: sel[1]으로 상위 2개 그룹과 하위 2개 그룹 구분
+    DMux(in=in, sel=sel[1], a=upper, b=lower);
+
+    // 두 번째 단계: sel[0]으로 각각 다시 2개씩 나누기
+    DMux(in=upper, sel=sel[0], a=a, b=b);
+    DMux(in=lower, sel=sel[0], a=c, b=d);
+}
+/**
+ * 8-way demultiplexor:
+ * [a, b, c, d, e, f, g, h] = [in, 0,  0,  0,  0,  0,  0,  0] if sel = 000
+ *                            [0, in,  0,  0,  0,  0,  0,  0] if sel = 001
+ *                            [0,  0, in,  0,  0,  0,  0,  0] if sel = 010
+ *                            [0,  0,  0, in,  0,  0,  0,  0] if sel = 011
+ *                            [0,  0,  0,  0, in,  0,  0,  0] if sel = 100
+ *                            [0,  0,  0,  0,  0, in,  0,  0] if sel = 101
+ *                            [0,  0,  0,  0,  0,  0, in,  0] if sel = 110
+ *                            [0,  0,  0,  0,  0,  0,  0, in] if sel = 111
+ */
+CHIP DMux8Way {
+    IN in, sel[3];
+    OUT a, b, c, d, e, f, g, h;
+
+    PARTS:
+    // 첫 번째 단계: sel[2] 기준으로 상위 4개, 하위 4개 그룹 나누기
+    DMux(in=in, sel=sel[2], a=upper4, b=lower4);
+
+    // 두 번째 단계: sel[1] 기준으로 각각 다시 2개씩 나누기
+    DMux(in=upper4, sel=sel[1], a=upper2a, b=upper2b);
+    DMux(in=lower4, sel=sel[1], a=lower2a, b=lower2b);
+
+    // 세 번째 단계: sel[0]으로 각각 다시 나누기
+    DMux(in=upper2a, sel=sel[0], a=a, b=b);
+    DMux(in=upper2b, sel=sel[0], a=c, b=d);
+    DMux(in=lower2a, sel=sel[0], a=e, b=f);
+    DMux(in=lower2b, sel=sel[0], a=g, b=h);
+}
+
+
+
+
+/**
+ * 8-way Or gate: 
+ * out = in[0] Or in[1] Or ... Or in[7]
+ */
+CHIP Or8Way {
+    IN in[8];
+    OUT out;
+
+    PARTS:
+    Or(a=in[0], b=in[1], out=or1);
+    Or(a=in[2], b=in[3], out=or2);
+    Or(a=in[4], b=in[5], out=or3);
+    Or(a=in[6], b=in[7], out=or4);
+    
+    Or(a=or1, b=or2, out=or12);
+    Or(a=or3, b=or4, out=or34);
+    
+    Or(a=or12, b=or34, out=out);
+}
+
+CHIP Or16 {
+    IN a[16], b[16];
+    OUT out[16];
+
+    PARTS:
+    Or(a=a[0],  b=b[0],  out=out[0]);
+    Or(a=a[1],  b=b[1],  out=out[1]);
+    Or(a=a[2],  b=b[2],  out=out[2]);
+    Or(a=a[3],  b=b[3],  out=out[3]);
+    Or(a=a[4],  b=b[4],  out=out[4]);
+    Or(a=a[5],  b=b[5],  out=out[5]);
+    Or(a=a[6],  b=b[6],  out=out[6]);
+    Or(a=a[7],  b=b[7],  out=out[7]);
+    Or(a=a[8],  b=b[8],  out=out[8]);
+    Or(a=a[9],  b=b[9],  out=out[9]);
+    Or(a=a[10], b=b[10], out=out[10]);
+    Or(a=a[11], b=b[11], out=out[11]);
+    Or(a=a[12], b=b[12], out=out[12]);
+    Or(a=a[13], b=b[13], out=out[13]);
+    Or(a=a[14], b=b[14], out=out[14]);
+    Or(a=a[15], b=b[15], out=out[15]);
+}
+
+CHIP Or8Way16 {
+    IN in0[16], in1[16], in2[16], in3[16], in4[16], in5[16], in6[16], in7[16];
+    OUT out[16];
+
+    PARTS:
+    // 각 비트 위치별로 Or8Way 수행
+    Or8Way(in[0]=in0[0], in[1]=in1[0], in[2]=in2[0], in[3]=in3[0],
+           in[4]=in4[0], in[5]=in5[0], in[6]=in6[0], in[7]=in7[0],
+           out=out[0]);
+    Or8Way(in[0]=in0[1], in[1]=in1[1], in[2]=in2[1], in[3]=in3[1],
+           in[4]=in4[1], in[5]=in5[1], in[6]=in6[1], in[7]=in7[1],
+           out=out[1]);
+    Or8Way(in[0]=in0[2], in[1]=in1[2], in[2]=in2[2], in[3]=in3[2],
+           in[4]=in4[2], in[5]=in5[2], in[6]=in6[2], in[7]=in7[2],
+           out=out[2]);
+    Or8Way(in[0]=in0[3], in[1]=in1[3], in[2]=in2[3], in[3]=in3[3],
+           in[4]=in4[3], in[5]=in5[3], in[6]=in6[3], in[7]=in7[3],
+           out=out[3]);
+    Or8Way(in[0]=in0[4], in[1]=in1[4], in[2]=in2[4], in[3]=in3[4],
+           in[4]=in4[4], in[5]=in5[4], in[6]=in6[4], in[7]=in7[4],
+           out=out[4]);
+    Or8Way(in[0]=in0[5], in[1]=in1[5], in[2]=in2[5], in[3]=in3[5],
+           in[4]=in4[5], in[5]=in5[5], in[6]=in6[5], in[7]=in7[5],
+           out=out[5]);
+    Or8Way(in[0]=in0[6], in[1]=in1[6], in[2]=in2[6], in[3]=in3[6],
+           in[4]=in4[6], in[5]=in5[6], in[6]=in6[6], in[7]=in7[6],
+           out=out[6]);
+    Or8Way(in[0]=in0[7], in[1]=in1[7], in[2]=in2[7], in[3]=in3[7],
+           in[4]=in4[7], in[5]=in5[7], in[6]=in6[7], in[7]=in7[7],
+           out=out[7]);
+    Or8Way(in[0]=in0[8], in[1]=in1[8], in[2]=in2[8], in[3]=in3[8],
+           in[4]=in4[8], in[5]=in5[8], in[6]=in6[8], in[7]=in7[8],
+           out=out[8]);
+    Or8Way(in[0]=in0[9], in[1]=in1[9], in[2]=in2[9], in[3]=in3[9],
+           in[4]=in4[9], in[5]=in5[9], in[6]=in6[9], in[7]=in7[9],
+           out=out[9]);
+    Or8Way(in[0]=in0[10], in[1]=in1[10], in[2]=in2[10], in[3]=in3[10],
+           in[4]=in4[10], in[5]=in5[10], in[6]=in6[10], in[7]=in7[10],
+           out=out[10]);
+    Or8Way(in[0]=in0[11], in[1]=in1[11], in[2]=in2[11], in[3]=in3[11],
+           in[4]=in4[11], in[5]=in5[11], in[6]=in6[11], in[7]=in7[11],
+           out=out[11]);
+    Or8Way(in[0]=in0[12], in[1]=in1[12], in[2]=in2[12], in[3]=in3[12],
+           in[4]=in4[12], in[5]=in5[12], in[6]=in6[12], in[7]=in7[12],
+           out=out[12]);
+    Or8Way(in[0]=in0[13], in[1]=in1[13], in[2]=in2[13], in[3]=in3[13],
+           in[4]=in4[13], in[5]=in5[13], in[6]=in6[13], in[7]=in7[13],
+           out=out[13]);
+    Or8Way(in[0]=in0[14], in[1]=in1[14], in[2]=in2[14], in[3]=in3[14],
+           in[4]=in4[14], in[5]=in5[14], in[6]=in6[14], in[7]=in7[14],
+           out=out[14]);
+    Or8Way(in[0]=in0[15], in[1]=in1[15], in[2]=in2[15], in[3]=in3[15],
+           in[4]=in4[15], in[5]=in5[15], in[6]=in6[15], in[7]=in7[15],
+           out=out[15]);
+}
