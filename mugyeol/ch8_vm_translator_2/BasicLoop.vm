@@ -1,0 +1,14 @@
+	push constant 0    
+	pop local 0         // sum = 0
+label LOOP
+	push argument 0     
+	push local 0
+	add
+	pop local 0	        // sum = sum + n
+	push argument 0
+	push constant 1
+	sub
+	pop argument 0      // n--
+	push argument 0
+	if-goto LOOP        // if n > 0, goto LOOP
+	push local 0        // else, pushes sum to the stack's top

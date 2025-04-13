@@ -16,7 +16,7 @@ let labelCounter = 0;
 
 function translateLine(line) {
   const tokens = line.trim().split(/\s+/);
-  const [cmd, arg1, arg2] = tokens;
+  const [cmd, arg1, arg2] = tokens;// push constant 21
 
   if (cmd === 'push') {
     if (arg1 === 'constant') {
