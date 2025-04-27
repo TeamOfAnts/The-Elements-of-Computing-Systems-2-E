@@ -1,0 +1,14 @@
+class Main {
+    function void main() {
+        var Square s;
+        let s = Square.new(30, 30, 20);
+        while (true) {
+            if (Keyboard.keyPressed() = 130) { do s.moveUp(); }
+            if (Keyboard.keyPressed() = 131) { do s.moveDown(); }
+            if (Keyboard.keyPressed() = 132) { do s.moveLeft(); }
+            if (Keyboard.keyPressed() = 133) { do s.moveRight(); }
+            do Keyboard.waitForRelease();
+        }
+        return;
+    }
+}
